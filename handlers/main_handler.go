@@ -14,7 +14,7 @@ import (
 )
 
 type Handler interface {
-	ShowMessageWithUserID(ctx context.Context, b *bot.Bot, update *m.Update)
+	RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
@@ -28,7 +28,7 @@ func NewHandler(membersFile string) Handler {
 	return h
 }
 
-func (h *handler) ShowMessageWithUserID(ctx context.Context, b *bot.Bot, update *m.Update) {
+func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update) {
 	chatId := update.Message.Chat.ID
 	nickname, _ := strings.CutPrefix(update.Message.Text, models.Register)
 	defer b.DeleteMessage(ctx, &bot.DeleteMessageParams{
@@ -38,7 +38,7 @@ func (h *handler) ShowMessageWithUserID(ctx context.Context, b *bot.Bot, update 
 	if nickname == "" {
 		msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:              chatId,
-			Text:                "Пожалуйста, введите в формате `/register {никнейм} без скобочек",
+			Text:                "Пожалуйста, введите в формате `/register {никнейм} без скобочек. Пример: /register Aldeshara",
 			DisableNotification: true,
 		})
 
@@ -65,7 +65,6 @@ func (h *handler) ShowMessageWithUserID(ctx context.Context, b *bot.Bot, update 
 		ChatID: chatId,
 		Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
 	})
-
 }
 
 func (h *handler) DeleteAllChatMessages(ctx context.Context, b *bot.Bot, update *m.Update) {

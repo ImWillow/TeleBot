@@ -36,7 +36,7 @@ func main() {
 		return
 	}
 
-	b.RegisterHandler(bot.HandlerTypeMessageText, models.Register, bot.MatchTypePrefix, h.ShowMessageWithUserID)
+	b.RegisterHandler(bot.HandlerTypeMessageText, models.Register, bot.MatchTypePrefix, h.RegisterUser)
 
 	log.Debug("Start bot")
 	b.Start(ctx)

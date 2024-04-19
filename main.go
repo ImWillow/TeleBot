@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"telegrambot/handlers"
 	"telegrambot/models"
+	"time"
 
 	"github.com/go-telegram/bot"
 	m "github.com/go-telegram/bot/models"
@@ -43,9 +44,15 @@ func main() {
 
 func handler(ctx context.Context, b *bot.Bot, update *m.Update) {
 	if update.Message.NewChatMembers != nil {
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
-			Text:   models.NewMember,
+		msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:              update.Message.Chat.ID,
+			Text:                models.NewMember,
+			DisableNotification: true,
+		})
+		time.Sleep(time.Minute)
+		b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+			ChatID:    update.Message.Chat.ID,
+			MessageID: msg.ID,
 		})
 	}
 }

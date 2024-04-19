@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"telegrambot/models"
 	"telegrambot/utils"
+	"time"
 
 	"github.com/go-telegram/bot"
 	m "github.com/go-telegram/bot/models"
@@ -30,42 +30,44 @@ func NewHandler(membersFile string) Handler {
 
 func (h *handler) ShowMessageWithUserID(ctx context.Context, b *bot.Bot, update *m.Update) {
 	chatId := update.Message.Chat.ID
-	nickname, f := strings.CutPrefix(update.Message.Text, models.Register)
-	if !f {
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatId,
-			Text:   "Пожалуйста, введите в формате `/register {никнейм} без скобочек",
+	nickname, _ := strings.CutPrefix(update.Message.Text, models.Register)
+	defer b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    chatId,
+		MessageID: update.Message.ID,
+	})
+	if nickname == "" {
+		msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:              chatId,
+			Text:                "Пожалуйста, введите в формате `/register {никнейм} без скобочек",
+			DisableNotification: true,
 		})
-		return
-	}
-	inData, err := utils.CheckUserInData(nickname, h.membersFile)
-	if err != nil {
-		logrus.Debug(err)
-		return
-	}
-	if !inData {
-		file, err := os.OpenFile(h.membersFile, os.O_APPEND|os.O_CREATE, 0644)
-		if err != nil {
-			logrus.Debug(err)
-			return
-		}
-		if _, err := file.WriteString(fmt.Sprintf(models.UserTemplate, update.Message.From.Username, nickname)); err != nil {
-			logrus.Debug(err)
-			return
-		}
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatId,
-			Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
-		})
-	} else {
-		logrus.Debug("Пользователь уже зарегестрирован")
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.From.ID,
-			Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
-		})
+
+		time.Sleep(time.Minute)
+
 		b.DeleteMessage(ctx, &bot.DeleteMessageParams{
 			ChatID:    chatId,
-			MessageID: update.Message.ID,
+			MessageID: msg.ID,
 		})
+
+		return
 	}
+
+	user := models.User{
+		TelegramID: update.Message.From.Username,
+		NickName:   nickname,
+	}
+	if err := utils.AddUserToData(user); err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatId,
+		Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
+	})
+
+}
+
+func (h *handler) DeleteAllChatMessages(ctx context.Context, b *bot.Bot, update *m.Update) {
+
 }

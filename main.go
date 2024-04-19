@@ -4,8 +4,10 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"telegrambot/gorm"
 	"telegrambot/handlers"
 	"telegrambot/models"
+	"telegrambot/repos"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -23,7 +25,20 @@ func main() {
 		DisableTimestamp: true,
 	})
 
-	h := handlers.NewHandler(models.Path_Members)
+	// Create db conn
+	gm := gorm.NewGormModule()
+	if err := gm.Connect(); err != nil {
+		log.WithField("error", err).Error("can't create db connection")
+		return
+	}
+	if err := gm.AutoMigrate(); err != nil {
+		log.WithField("error", err).Error("can't automigrate db")
+		return
+	}
+	// Create repositories
+	repos := repos.NewRepo(gm)
+	// Create handler
+	h := handlers.NewHandler(repos)
 
 	// Bot implementation.
 	opts := []bot.Option{

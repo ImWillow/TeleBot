@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"telegrambot/models"
-	"telegrambot/utils"
+	"telegrambot/repos"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -18,12 +18,12 @@ type Handler interface {
 }
 
 type handler struct {
-	membersFile string
+	repos repos.Repos
 }
 
-func NewHandler(membersFile string) Handler {
+func NewHandler(repos repos.Repos) Handler {
 	h := new(handler)
-	h.membersFile = membersFile
+	h.repos = repos
 
 	return h
 }
@@ -55,8 +55,9 @@ func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update
 	user := models.User{
 		TelegramID: update.Message.From.Username,
 		NickName:   nickname,
+		Role:       models.Role_member,
 	}
-	if err := utils.AddUserToData(user); err != nil {
+	if err := h.repos.UserRepo.NewUser(user); err != nil {
 		logrus.Error(err)
 		return
 	}

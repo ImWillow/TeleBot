@@ -1,0 +1,12 @@
+[Unit]
+Description=AFK telegram bot
+After=network.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/opt/telebot/telegrambot
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

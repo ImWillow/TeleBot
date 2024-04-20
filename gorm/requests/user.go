@@ -12,7 +12,7 @@ func (rm *requestModels) NewUser(user models.User) error {
 		Role:       user.Role,
 	}
 
-	return rm.db.Create(dbuser).Error
+	return rm.db.Create(&dbuser).Error
 }
 
 func (rm *requestModels) GetUsers() ([]dbmodels.User, error) {

@@ -11,6 +11,9 @@ type RequestModels interface {
 	// User
 	NewUser(user models.User) error
 	GetUsers() ([]dbmodels.User, error)
+	// Promos
+	GetPromos() ([]dbmodels.Promo, error)
+	NewPromo(promo models.Promo) error
 }
 
 type requestModels struct {

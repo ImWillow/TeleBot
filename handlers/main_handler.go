@@ -14,11 +14,14 @@ import (
 )
 
 type Handler interface {
+	UpdateWelcomeMSG(welocomeMSG *m.Message)
 	RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update)
+	WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
-	repos repos.Repos
+	repos       repos.Repos
+	welocomeMSG *m.Message
 }
 
 func NewHandler(repos repos.Repos) Handler {
@@ -26,6 +29,10 @@ func NewHandler(repos repos.Repos) Handler {
 	h.repos = repos
 
 	return h
+}
+
+func (h *handler) UpdateWelcomeMSG(welocomeMSG *m.Message) {
+	h.welocomeMSG = welocomeMSG
 }
 
 func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update) {
@@ -62,12 +69,25 @@ func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update
 		return
 	}
 
+	b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    chatId,
+		MessageID: h.welocomeMSG.ID,
+	})
+
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatId,
 		Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
 	})
 }
 
-func (h *handler) DeleteAllChatMessages(ctx context.Context, b *bot.Bot, update *m.Update) {
-
+func (h *handler) WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update) {
+	if update.Message.NewChatMembers != nil {
+		msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:              update.Message.Chat.ID,
+			Text:                models.NewMember,
+			DisableNotification: true,
+		})
+		time.Sleep(time.Minute)
+		h.welocomeMSG = msg
+	}
 }

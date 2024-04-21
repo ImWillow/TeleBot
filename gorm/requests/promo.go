@@ -2,7 +2,6 @@ package requests
 
 import (
 	dbmodels "telegrambot/gorm/models"
-	"telegrambot/models"
 )
 
 func (rm *requestModels) GetPromos() ([]dbmodels.Promo, error) {
@@ -14,11 +13,11 @@ func (rm *requestModels) GetPromos() ([]dbmodels.Promo, error) {
 	return promos, nil
 }
 
-func (rm *requestModels) NewPromo(promo models.Promo) error {
-	dbpromo := dbmodels.Promo{
-		Key:    promo.Key,
-		Reward: promo.Reward,
-	}
+func (rm *requestModels) NewPromo(promo dbmodels.Promo) error {
 
-	return rm.db.Create(&dbpromo).Error
+	return rm.db.Create(&promo).Error
+}
+
+func (rm *requestModels) ClearPromos() error {
+	return rm.db.Unscoped().Where("1=1").Delete(&dbmodels.Promo{}).Error
 }

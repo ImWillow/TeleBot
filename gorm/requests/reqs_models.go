@@ -13,7 +13,8 @@ type RequestModels interface {
 	GetUsers() ([]dbmodels.User, error)
 	// Promos
 	GetPromos() ([]dbmodels.Promo, error)
-	NewPromo(promo models.Promo) error
+	NewPromo(promo dbmodels.Promo) error
+	ClearPromos() error
 }
 
 type requestModels struct {

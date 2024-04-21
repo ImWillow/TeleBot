@@ -17,6 +17,7 @@ type Handler interface {
 	UpdateWelcomeMSG(welocomeMSG *m.Message)
 	RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update)
 	WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update)
+	GetPromos(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
@@ -90,4 +91,26 @@ func (h *handler) WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Upda
 		time.Sleep(time.Minute)
 		h.welocomeMSG = msg
 	}
+}
+
+func (h *handler) GetPromos(ctx context.Context, b *bot.Bot, update *m.Update) {
+	promos, err := h.repos.PromoRepo.GetPromos()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	text := ""
+	for _, promo := range promos {
+		text += fmt.Sprintf("%s - %s; \n", promo.Key, promo.Reward)
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: update.Message.Chat.ID,
+		Text:   text,
+		ReplyParameters: &m.ReplyParameters{
+			MessageID: update.Message.ID,
+			ChatID:    update.Message.Chat.ID,
+		},
+	})
 }

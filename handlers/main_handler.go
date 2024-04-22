@@ -18,6 +18,7 @@ type Handler interface {
 	RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update)
 	WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update)
 	GetPromos(ctx context.Context, b *bot.Bot, update *m.Update)
+	GetMembers(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
@@ -108,6 +109,29 @@ func (h *handler) GetPromos(ctx context.Context, b *bot.Bot, update *m.Update) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   text,
+		ReplyParameters: &m.ReplyParameters{
+			MessageID: update.Message.ID,
+			ChatID:    update.Message.Chat.ID,
+		},
+	})
+}
+
+func (h *handler) GetMembers(ctx context.Context, b *bot.Bot, update *m.Update) {
+	users, err := h.repos.UserRepo.GetUsers()
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	text := ""
+	for _, user := range users {
+		text += fmt.Sprintf("Telegram: @%s - Никнейм: %s; \n", user.TelegramID, user.NickName)
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:              update.Message.Chat.ID,
+		Text:                text,
+		DisableNotification: true,
 		ReplyParameters: &m.ReplyParameters{
 			MessageID: update.Message.ID,
 			ChatID:    update.Message.Chat.ID,

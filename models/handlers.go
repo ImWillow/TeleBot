@@ -4,4 +4,5 @@ package models
 const (
 	Register = "/register "
 	Promos   = "/promos"
+	Members  = "/members"
 )

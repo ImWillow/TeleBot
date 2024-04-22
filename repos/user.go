@@ -9,6 +9,7 @@ import (
 
 type User interface {
 	NewUser(user models.User) error
+	GetUsers() ([]models.User, error)
 }
 
 type user struct {
@@ -39,6 +40,18 @@ func (u *user) NewUser(user models.User) error {
 	}
 
 	return errors.New("user already in DB")
+}
+
+func (u *user) GetUsers() ([]models.User, error) {
+	rm := u.gm.GetRM()
+
+	dbusers, err := rm.GetUsers()
+	if err != nil {
+		return nil, err
+	}
+	users := utils.UsersFromDB(dbusers)
+
+	return users, nil
 }
 
 func (u *user) CheckUserInUsers(user models.User, users []models.User) bool {

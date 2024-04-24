@@ -8,3 +8,9 @@ type User struct {
 	Nickname   string
 	Role       string
 }
+
+type UserPromos struct {
+	gorm.Model
+	UserID uint
+	Promos []string `gorm:"type:text[]"`
+}

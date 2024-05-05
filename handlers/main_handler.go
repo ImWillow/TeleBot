@@ -19,6 +19,7 @@ type Handler interface {
 	WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update)
 	GetPromos(ctx context.Context, b *bot.Bot, update *m.Update)
 	GetMembers(ctx context.Context, b *bot.Bot, update *m.Update)
+	GetCommands(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
@@ -103,17 +104,16 @@ func (h *handler) GetPromos(ctx context.Context, b *bot.Bot, update *m.Update) {
 
 	text := ""
 	for _, promo := range promos {
-		text += fmt.Sprintf("%s - %s; \n", promo.Key, promo.Reward)
+		text += fmt.Sprintf("\\<\\-\\-\\-\\-`%s`\\-\\-\\-\\-\\>\n>%s\n>Date: %s\n>Active: %t\n", promo.Key, promo.Reward, promo.Date, promo.Active)
 	}
 
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   text,
-		ReplyParameters: &m.ReplyParameters{
-			MessageID: update.Message.ID,
-			ChatID:    update.Message.Chat.ID,
-		},
-	})
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:    update.Message.Chat.ID,
+		Text:      text,
+		ParseMode: m.ParseModeMarkdown,
+	}); err != nil {
+		logrus.Debug(err)
+	}
 }
 
 func (h *handler) GetMembers(ctx context.Context, b *bot.Bot, update *m.Update) {
@@ -137,4 +137,51 @@ func (h *handler) GetMembers(ctx context.Context, b *bot.Bot, update *m.Update) 
 			ChatID:    update.Message.Chat.ID,
 		},
 	})
+}
+
+func (h *handler) GetCommands(ctx context.Context, b *bot.Bot, update *m.Update) {
+	commandList := "`/register` - регистрация нового пользователя; \n`/promos` - список актуальных промокодов; \n"
+	logrus.Debug("ChatID: ", update.Message.Chat.ID)
+	if update.Message.Chat.ID != models.Chat_ID {
+		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:              update.Message.From.ID,
+			Text:                commandList,
+			DisableNotification: true,
+		})
+		if err != nil {
+			logrus.Debug(err)
+			return
+		}
+
+		return
+	}
+
+	msg, err := b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:              update.Message.Chat.ID,
+		Text:                commandList,
+		DisableNotification: true,
+	})
+	if err != nil {
+		logrus.Debug(err)
+		return
+	}
+
+	go func() {
+		time.Sleep(time.Minute)
+
+		if _, err := b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+			ChatID:    update.Message.From.ID,
+			MessageID: msg.ID,
+		}); err != nil {
+			logrus.Debug(err)
+			return
+		}
+		if _, err := b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+			ChatID:    update.Message.From.ID,
+			MessageID: update.Message.ID,
+		}); err != nil {
+			logrus.Debug(err)
+			return
+		}
+	}()
 }

@@ -35,15 +35,18 @@ func main() {
 		log.WithField("error", err).Error("can't automigrate db")
 		return
 	}
+
 	// Parse promos
 	var done chan bool
-	ticker := time.NewTicker(time.Hour * 6)
+	ticker := time.NewTicker(time.Hour * 4)
 	go promo.StartParsing(done, ticker, gm.GetRM())
 	defer func() {
 		done <- true
 	}()
+
 	// Create repositories
 	repos := repos.NewRepo(gm)
+
 	// Create handler
 	h := handlers.NewHandler(repos)
 
@@ -61,6 +64,7 @@ func main() {
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Register, bot.MatchTypePrefix, h.RegisterUser)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Promos, bot.MatchTypePrefix, h.GetPromos)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Members, bot.MatchTypePrefix, h.GetMembers)
+	b.RegisterHandler(bot.HandlerTypeMessageText, models.Commands, bot.MatchTypePrefix, h.GetCommands)
 
 	log.Debug("Start bot")
 	b.Start(ctx)

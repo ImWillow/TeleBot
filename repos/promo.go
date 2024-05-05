@@ -32,6 +32,8 @@ func (p *promo) GetPromos() ([]models.Promo, error) {
 		promos = append(promos, models.Promo{
 			Key:    dbpromo.Key,
 			Reward: dbpromo.Reward,
+			Date:   dbpromo.Date,
+			Active: dbpromo.Active,
 		})
 	}
 

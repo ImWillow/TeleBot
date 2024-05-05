@@ -27,7 +27,7 @@ func NewGormModule() GormModule {
 }
 
 func (gm *gormModule) Connect() error {
-	dsn := "host=localhost user=postgres password=admin dbname=telebot port=5432 sslmode=disable TimeZone=Europe/Moscow"
+	dsn := "host=localhost user=admin password=admin dbname=telebot port=5432 sslmode=disable TimeZone=Europe/Moscow"
 	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return err

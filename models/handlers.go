@@ -5,4 +5,5 @@ const (
 	Register = "/register "
 	Promos   = "/promos"
 	Members  = "/members"
+	Commands = "/commands"
 )

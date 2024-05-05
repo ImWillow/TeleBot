@@ -40,12 +40,22 @@ func parse(rm requests.RequestModels) {
 	}
 
 	var promos []dbmodels.Promo
-	doc.Find("#footable_20150 > tbody > tr").Each(func(i int, s *goquery.Selection) {
-		var promo dbmodels.Promo
-		promo.Key = s.Find("td").Nodes[0].FirstChild.Attr[1].Val
-		promo.Reward = s.Find("td").Nodes[1].FirstChild.Data
-		promos = append(promos, promo)
-	})
+	doc.Find("body > div.at-wrap > div.xxl_container > section > main > div > div > div.games-content > div.codes-module").
+		Find("div").
+		Each(func(i int, s *goquery.Selection) {
+			if s.HasClass("item-promo module md-block") {
+				var promo dbmodels.Promo
+				promo.Key = s.Find("h4").Text()
+				promo.Reward = s.Find("p").Text()
+				promo.Date = s.Find(`div`).Nodes[0].FirstChild.Data
+				if s.Find(`div`).Nodes[1].FirstChild.Data == "Активный" {
+					promo.Active = true
+				} else {
+					promo.Active = false
+				}
+				promos = append(promos, promo)
+			}
+		})
 
 	// Add promos to db
 	if err := rm.ClearPromos(); err != nil {
@@ -56,24 +66,4 @@ func parse(rm requests.RequestModels) {
 			logrus.WithError(err).Error("can't write promo to db")
 		}
 	}
-	// dbpromos, err := rm.GetPromos()
-	// if err != nil {
-	// 	logrus.WithError(err).Error("can't get promos from db")
-	// }
-	// for _, promo := range promos {
-	// 	inner := true
-	// 	for _, dbpromo := range dbpromos {
-	// 		if dbpromo.Key == promo.Key {
-	// 			inner = false
-	// 			return
-	// 		}
-	// 	}
-	// 	if !inner {
-	// 		continue
-	// 	}
-
-	// 	if err := rm.NewPromo(promo); err != nil {
-	// 		logrus.WithError(err).Error("can't write promo to db")
-	// 	}
-	// }
 }

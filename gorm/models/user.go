@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/lib/pq"
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -11,6 +14,6 @@ type User struct {
 
 type UserPromos struct {
 	gorm.Model
-	UserID uint
-	Promos []string `gorm:"type:text[]"`
+	UserID   uint
+	PromoIDs pq.Int64Array `gorm:"type:integer[]"`
 }

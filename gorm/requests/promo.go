@@ -18,6 +18,7 @@ func (rm *requestModels) NewPromo(promo dbmodels.Promo) error {
 	return rm.db.Create(&promo).Error
 }
 
-func (rm *requestModels) ClearPromos() error {
-	return rm.db.Unscoped().Where("1=1").Delete(&dbmodels.Promo{}).Error
-}
+// NOTE: deprecated
+// func (rm *requestModels) ClearPromos() error {
+// 	return rm.db.Unscoped().Where("1=1").Delete(&dbmodels.Promo{}).Error
+// }

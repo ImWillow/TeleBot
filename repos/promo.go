@@ -6,7 +6,8 @@ import (
 )
 
 type Promo interface {
-	GetPromos() ([]models.Promo, error)
+	GetPromos(userID string) ([]models.Promo, error)
+	AddPromos(promos []int64, userNick string) error
 }
 
 type promo struct {
@@ -20,22 +21,56 @@ func NewPromoRepo(gm gorm.GormModule) Promo {
 	return u
 }
 
-func (p *promo) GetPromos() ([]models.Promo, error) {
+func (p *promo) GetPromos(userID string) ([]models.Promo, error) {
 	rm := p.gm.GetRM()
 	dbpromos, err := rm.GetPromos()
 	if err != nil {
 		return nil, err
 	}
 
+	user, err := rm.GetUserByTelegramID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	userPromoIDs, err := rm.GetUserPromos(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	var promos []models.Promo
 	for _, dbpromo := range dbpromos {
+		f := false
+		for _, id := range userPromoIDs {
+			if uint(id) == dbpromo.ID {
+				f = true
+				break
+			}
+		}
+		if f {
+			continue
+		}
 		promos = append(promos, models.Promo{
 			Key:    dbpromo.Key,
 			Reward: dbpromo.Reward,
 			Date:   dbpromo.Date,
 			Active: dbpromo.Active,
+			ID:     dbpromo.ID,
 		})
 	}
 
 	return promos, nil
+}
+
+func (p *promo) AddPromos(promos []int64, userNick string) error {
+	rm := p.gm.GetRM()
+	u, err := rm.GetUserByTelegramID(userNick)
+	if err != nil {
+		return err
+	}
+	if err := rm.AddPromosToUser(promos, u.ID); err != nil {
+		return err
+	}
+
+	return nil
 }

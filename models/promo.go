@@ -9,4 +9,5 @@ type Promo struct {
 	Reward string `json:"reward"`
 	Active bool   `json:"active"`
 	Date   string `json:"date"`
+	ID     uint   `json:"id"`
 }

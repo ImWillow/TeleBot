@@ -5,6 +5,7 @@ import (
 	dbmodels "telegrambot/gorm/models"
 	"telegrambot/gorm/requests"
 	"telegrambot/models"
+	"telegrambot/utils"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -57,11 +58,14 @@ func parse(rm requests.RequestModels) {
 			}
 		})
 
-	// Add promos to db
-	if err := rm.ClearPromos(); err != nil {
-		logrus.WithError(err).Error("can't delete promos from db")
+	dbPromos, err := rm.GetPromos()
+	if err != nil {
+		logrus.WithError(err).Error("can't create document from page")
 	}
-	for _, promo := range promos {
+
+	rp := utils.CheckPromo(dbPromos, promos)
+	for _, promo := range rp {
+		logrus.Debug("Add new promocode")
 		if err := rm.NewPromo(promo); err != nil {
 			logrus.WithError(err).Error("can't write promo to db")
 		}

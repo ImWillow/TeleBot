@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.9.1
 	github.com/go-gormigrate/gormigrate/v2 v2.1.2
 	github.com/go-telegram/bot v1.2.1
+	github.com/lib/pq v1.10.9
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.9

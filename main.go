@@ -65,6 +65,7 @@ func main() {
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Promos, bot.MatchTypePrefix, h.GetPromos)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Members, bot.MatchTypePrefix, h.GetMembers)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Commands, bot.MatchTypePrefix, h.GetCommands)
+	b.RegisterHandler(bot.HandlerTypeMessageText, models.ActivatePromo, bot.MatchTypePrefix, h.ActivatePromos)
 
 	log.Debug("Start bot")
 	b.Start(ctx)

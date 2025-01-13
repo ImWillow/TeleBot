@@ -55,7 +55,7 @@ func main() {
 		bot.WithDefaultHandler(h.WelcomeHandler),
 	}
 
-	b, err := bot.New("6870464352:AAFGYIf7A2s3MamrEkiE93lZifvo_NfBa7w", opts...)
+	b, err := bot.New("secret", opts...)
 	if err != nil {
 		log.WithField("error", err).Error("can't create bot")
 		return

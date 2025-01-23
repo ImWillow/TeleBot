@@ -12,13 +12,10 @@ type RequestModels interface {
 	NewUser(user models.User) error
 	GetUsers() ([]dbmodels.User, error)
 	GetUserByTelegramID(tID string) (dbmodels.User, error)
-	// User Promos
-	AddPromosToUser(promos []int64, userID uint) error
-	GetUserPromos(userID uint) ([]int64, error)
 	// Promos
 	GetPromos() ([]dbmodels.Promo, error)
+	UpdatePromo(promo dbmodels.Promo) error
 	NewPromo(promo dbmodels.Promo) error
-	// ClearPromos() error // NOTE: deprecated
 }
 
 type requestModels struct {

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"telegrambot/models"
 	"telegrambot/repos"
-	"telegrambot/utils"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -18,10 +17,8 @@ type Handler interface {
 	UpdateWelcomeMSG(welocomeMSG *m.Message)
 	RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update)
 	WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Update)
-	GetPromos(ctx context.Context, b *bot.Bot, update *m.Update)
 	GetMembers(ctx context.Context, b *bot.Bot, update *m.Update)
 	GetCommands(ctx context.Context, b *bot.Bot, update *m.Update)
-	ActivatePromos(ctx context.Context, b *bot.Bot, update *m.Update)
 }
 
 type handler struct {
@@ -53,6 +50,7 @@ func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update
 			ChatID:              chatId,
 			Text:                "Пожалуйста, введите в формате `/register {никнейм} без скобочек. Пример: /register Aldeshara",
 			DisableNotification: true,
+			MessageThreadID:     models.GeneralId,
 		})
 
 		go func() {
@@ -83,8 +81,9 @@ func (h *handler) RegisterUser(ctx context.Context, b *bot.Bot, update *m.Update
 	})
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatId,
-		Text:   fmt.Sprintf(models.AllowedNewMember, nickname),
+		ChatID:          chatId,
+		Text:            fmt.Sprintf(models.AllowedNewMember, nickname),
+		MessageThreadID: models.GeneralId,
 	})
 }
 
@@ -94,32 +93,11 @@ func (h *handler) WelcomeHandler(ctx context.Context, b *bot.Bot, update *m.Upda
 		msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:              update.Message.Chat.ID,
 			Text:                models.NewMember,
+			MessageThreadID:     models.GeneralId,
 			DisableNotification: true,
 		})
 		time.Sleep(time.Second * 30)
 		h.welocomeMSG = msg
-	}
-}
-
-func (h *handler) GetPromos(ctx context.Context, b *bot.Bot, update *m.Update) {
-	logrus.Debug("User get promos")
-	promos, err := h.repos.PromoRepo.GetPromos(update.Message.From.Username)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
-
-	text := ""
-	for _, promo := range promos {
-		text += fmt.Sprintf("\\#\\#`%s`\\#\\#\n>%s\n>Date: %s\n>Active: %t\n>ID: `%d`\n", promo.Key, promo.Reward, promo.Date, promo.Active, promo.ID)
-	}
-
-	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		Text:      text,
-		ParseMode: m.ParseModeMarkdown,
-	}); err != nil {
-		logrus.Debug(err)
 	}
 }
 
@@ -191,68 +169,5 @@ func (h *handler) GetCommands(ctx context.Context, b *bot.Bot, update *m.Update)
 			logrus.Debug(err)
 			return
 		}
-	}()
-}
-
-func (h *handler) ActivatePromos(ctx context.Context, b *bot.Bot, update *m.Update) {
-	logrus.Debug("Activate promos")
-	chatId := update.Message.Chat.ID
-	promosStr, _ := strings.CutPrefix(update.Message.Text, models.ActivatePromo)
-	if update.Message.Chat.ID != models.Chat_ID {
-		if strings.Contains(promosStr, ",") || strings.Contains(promosStr, ".") {
-			if _, err := b.DeleteMessage(ctx, &bot.DeleteMessageParams{
-				ChatID:    chatId,
-				MessageID: update.Message.ID,
-			}); err != nil {
-				logrus.Error(err)
-				return
-			}
-			if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID:              chatId,
-				Text:                "Пожалуйста, введите в формате `/addPromo {ID promo} через пробел. Пример: /addPromo 460 543 345",
-				DisableNotification: true,
-			}); err != nil {
-				logrus.Error(err)
-				return
-			}
-		}
-
-		promos := strings.Split(promosStr, " ")
-		promosInt, err := utils.StringsToInts(promos)
-		if err != nil {
-			logrus.Error(err)
-			return
-		}
-
-		if err := h.repos.PromoRepo.AddPromos(promosInt, update.Message.From.Username); err != nil {
-			logrus.Error(err)
-			return
-		}
-
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID:              chatId,
-			Text:                "Успешно добавлено!",
-			DisableNotification: true,
-		}); err != nil {
-			logrus.Error(err)
-			return
-		}
-
-		return
-	}
-
-	msg, _ := b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:              chatId,
-		Text:                "Пожалуйста, выполните эту команду в личке бота.",
-		DisableNotification: true,
-	})
-
-	go func() {
-		time.Sleep(time.Second * 30)
-
-		b.DeleteMessages(ctx, &bot.DeleteMessagesParams{
-			ChatID:     chatId,
-			MessageIDs: []int{msg.ID, update.Message.ID},
-		})
 	}()
 }

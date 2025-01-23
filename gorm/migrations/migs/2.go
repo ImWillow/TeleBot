@@ -12,8 +12,7 @@ var M2 *gormigrate.Migration = &gormigrate.Migration{
 			gorm.Model
 			Key    string
 			Reward string
-			Active bool
-			Date   string
+			Sended bool
 		}
 		return tx.Migrator().CreateTable(&promo{})
 	},

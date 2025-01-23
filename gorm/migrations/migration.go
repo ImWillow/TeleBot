@@ -7,5 +7,5 @@ import (
 )
 
 var Migrations []*gormigrate.Migration = []*gormigrate.Migration{
-	migs.M1, migs.M2, migs.M3,
+	migs.M1, migs.M2,
 }

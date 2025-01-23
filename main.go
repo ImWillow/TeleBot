@@ -38,7 +38,8 @@ func main() {
 
 	// Parse promos
 	var done chan bool
-	ticker := time.NewTicker(time.Hour * 4)
+	defer close(done)
+	ticker := time.NewTicker(time.Hour * 24)
 	go promo.StartParsing(done, ticker, gm.GetRM())
 	defer func() {
 		done <- true
@@ -55,17 +56,26 @@ func main() {
 		bot.WithDefaultHandler(h.WelcomeHandler),
 	}
 
-	b, err := bot.New("secret", opts...)
+	b, err := bot.New(models.BotAPI, opts...)
 	if err != nil {
 		log.WithField("error", err).Error("can't create bot")
 		return
 	}
 
+	var doneSender chan bool
+	defer close(done)
+	tickerSender := time.NewTicker(time.Hour * 1)
+	go func() {
+		time.Sleep(time.Minute)
+		promo.StartSendNewPromos(doneSender, tickerSender, gm.GetRM(), b)
+	}()
+	defer func() {
+		done <- true
+	}()
+
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Register, bot.MatchTypePrefix, h.RegisterUser)
-	b.RegisterHandler(bot.HandlerTypeMessageText, models.Promos, bot.MatchTypePrefix, h.GetPromos)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Members, bot.MatchTypePrefix, h.GetMembers)
 	b.RegisterHandler(bot.HandlerTypeMessageText, models.Commands, bot.MatchTypePrefix, h.GetCommands)
-	b.RegisterHandler(bot.HandlerTypeMessageText, models.ActivatePromo, bot.MatchTypePrefix, h.ActivatePromos)
 
 	log.Debug("Start bot")
 	b.Start(ctx)

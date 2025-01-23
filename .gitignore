@@ -20,4 +20,4 @@
 # Go workspace file
 go.work
 telegrambot
-config.go
+models/config.go
